@@ -50,7 +50,16 @@ AddHTMLButton("button", "thin", (event) => {
 AddHTMLButton("button", "thick", (event) => {
     markType = "thick";
 });
-
+AddHTMLButton("button", "😀", (event) => {
+    markType = '😀';
+});
+AddHTMLButton("button", "😶", (event) => {
+    markType = '😶';
+});
+AddHTMLButton("button", "🙃", (event) => {
+    markType = '🙃';
+});
+let EventParameter: MouseEvent;
 const drawingChanged = new Event("drawing-changed");
 document.addEventListener("drawing-changed", Redraw);
 
@@ -61,6 +70,7 @@ let bCreateNewLineSegment = true;
 let mouseDown = false;
 canvas.addEventListener("mousedown", (event) => {
     mouseDown = true;
+    Draw(event);
 });
 canvas.addEventListener("mouseup", (event) => {
     mouseDown = false;
@@ -69,46 +79,65 @@ canvas.addEventListener("mouseup", (event) => {
 });
 canvas.addEventListener("mousemove", (event) => {
     if(mouseDown){
-        if(bCreateNewLineSegment){
-            MarkBuffer.push({draw: (ctx: CanvasRenderingContext2D) => {}});
-            CurrentMarkType = markType;
-        }
-        PointBuffer.push({x: event.offsetX, y: event.offsetY});
-        let tmp: Point[] = [];
-        for(let i = 0; i < PointBuffer.length; i++){
-            tmp.push({x: PointBuffer[i].x, y: PointBuffer[i].y});
-        }
-        if(CurrentMarkType === "thin"){
-            MarkBuffer[MarkBuffer.length - 1].draw = (ctx: CanvasRenderingContext2D) => {
-                DrawLine(ctx, tmp, 1);
-            };
-        } else if(CurrentMarkType === "thick"){
-            MarkBuffer[MarkBuffer.length - 1].draw = (ctx: CanvasRenderingContext2D) => {
-                DrawLine(ctx, tmp, 4);
-            };
-        }
-        RedoBuffer.splice(0, RedoBuffer.length);
-        bCreateNewLineSegment = false;
-        document.dispatchEvent(drawingChanged);
-        Tool.draw = (ctx: CanvasRenderingContext2D) => {};
+        Draw(event);
     }
     else{
-        if(markType === "thin"){
-            Tool.draw = (ctx: CanvasRenderingContext2D) => {
-                ctx.beginPath();
-                ctx.ellipse(event.offsetX, event.offsetY, 0.5, 0.5, 0, 0, 360);
-                ctx.fill();
-            };
-        } else if(markType === "thick"){
-            Tool.draw = (ctx: CanvasRenderingContext2D) => {
-                ctx.beginPath();
-                ctx.ellipse(event.offsetX, event.offsetY, 2, 2, 0, 0, 360);
-                ctx.fill();
-            };
-        }
-        document.dispatchEvent(ToolMoved);
+        DrawTool(event);
     }
 });
+
+function Draw(event: MouseEvent){
+    if(bCreateNewLineSegment){
+        MarkBuffer.push({draw: (ctx: CanvasRenderingContext2D) => {}});
+        CurrentMarkType = markType;
+    }
+    PointBuffer.push({x: event.offsetX, y: event.offsetY});
+    let tmp: Point[] = [];
+    for(let i = 0; i < PointBuffer.length; i++){
+        tmp.push({x: PointBuffer[i].x, y: PointBuffer[i].y});
+    }
+    if(CurrentMarkType === "thin"){
+        MarkBuffer[MarkBuffer.length - 1].draw = (ctx: CanvasRenderingContext2D) => {
+            DrawLine(ctx, tmp, 1);
+        };
+    } else if(CurrentMarkType === "thick"){
+        MarkBuffer[MarkBuffer.length - 1].draw = (ctx: CanvasRenderingContext2D) => {
+            DrawLine(ctx, tmp, 4);
+        };
+    }
+    else {
+        let tmpTxt = String(CurrentMarkType);
+        MarkBuffer[MarkBuffer.length - 1].draw = (ctx: CanvasRenderingContext2D) => {
+            DrawText(ctx, tmpTxt, {x: event.offsetX, y: event.offsetY});
+        };
+    }
+    RedoBuffer.splice(0, RedoBuffer.length);
+    bCreateNewLineSegment = false;
+    Tool.draw = (ctx: CanvasRenderingContext2D) => {};
+    document.dispatchEvent(drawingChanged);
+}
+function DrawTool(event: MouseEvent){
+    if(markType === "thin"){
+        Tool.draw = (ctx: CanvasRenderingContext2D) => {
+            ctx.beginPath();
+            ctx.ellipse(event.offsetX, event.offsetY, 0.5, 0.5, 0, 0, 360);
+            ctx.fill();
+        };
+    } else if(markType === "thick"){
+        Tool.draw = (ctx: CanvasRenderingContext2D) => {
+            ctx.beginPath();
+            ctx.ellipse(event.offsetX, event.offsetY, 2, 2, 0, 0, 360);
+            ctx.fill();
+        };
+    }
+    else {
+        let tmpTxt = String(markType);
+        Tool.draw = (ctx: CanvasRenderingContext2D) => {
+            DrawText(ctx, tmpTxt, {x: event.offsetX, y: event.offsetY});
+        };
+    }
+    document.dispatchEvent(ToolMoved);
+}
 
 function AddHTMLElement(type: string, innerHTML: string | null = null): HTMLElement{
     const tmp = document.createElement(type);
@@ -129,7 +158,18 @@ function StackTopExchange(buffer1: any[], buffer2: any[]){
         buffer2.push(tmp);
     }
 }
-
+function DrawText(ctx: CanvasRenderingContext2D, txt: string, pos: Point){
+    ctx.save();
+    ctx.beginPath();
+    ctx.translate(pos.x, pos.y + 9);
+    ctx.scale(3.0, 3.0);
+    ctx.translate(-pos.x, -pos.y - 9);
+    ctx.textAlign = "center";
+    ctx.fillText(txt, pos.x, pos.y + 9);
+    ctx.fill();
+    ctx.resetTransform();
+    ctx.restore();
+}
 function DrawLine(ctx: CanvasRenderingContext2D, data: Point[], size: number){
     ctx.lineJoin = "round";
     ctx.lineWidth = size;
