@@ -51,6 +51,28 @@ let Buttons: Button[] = [
     },
     {
         type: "button",
+        innerHTML: "export", 
+        ClickFunction: (event) => {
+            const canvas = document.createElement("canvas");
+            const ctx: CanvasRenderingContext2D | null = canvas.getContext("2d");
+            canvas.id = "export canvas";
+            canvas.width = 1024;
+            canvas.height = 1024;
+            if(ctx !== null){
+                ctx.reset();
+                ctx.scale(4, 4);
+                for(let i = 0; i < MarkBuffer.length; i++){
+                    MarkBuffer[i].draw(ctx);
+                }
+            }
+            const anchor = document.createElement("a");
+            anchor.href = canvas.toDataURL("image/png");
+            anchor.download = "sketchpad.png";
+            anchor.click();
+        }
+    },
+    {
+        type: "button",
         innerHTML: "Add Sticker", 
         ClickFunction: (event) => {
             let tmp: string | null = prompt("enter an emoji", "");
