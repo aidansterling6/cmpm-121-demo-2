@@ -3,6 +3,12 @@ import "./style.css";
 
 const APP_NAME = "Sticker Sketchpad";
 const app = document.querySelector<HTMLDivElement>("#app")!;
+interface Color {
+    red: number;
+    green: number;
+    blue: number;
+}
+let color: Color = {red: 0, green: 0, blue:0};
 
 interface Button {
     type: string; 
@@ -51,6 +57,24 @@ let Buttons: Button[] = [
     },
     {
         type: "button",
+        innerHTML: "color", 
+        ClickFunction: (event) => {
+            let tmpRed: string | null = prompt("red", "0");
+            if(tmpRed){
+                color.red = Number(tmpRed);
+            }
+            let tmpGreen: string | null = prompt("green", "0");
+            if(tmpGreen){
+                color.green = Number(tmpGreen);
+            }
+            let tmpBlue: string | null = prompt("blue", "0");
+            if(tmpBlue){
+                color.blue = Number(tmpBlue);
+            }
+        }
+    },
+    {
+        type: "button",
         innerHTML: "export", 
         ClickFunction: (event) => {
             const canvas = document.createElement("canvas");
@@ -61,6 +85,11 @@ let Buttons: Button[] = [
             if(ctx !== null){
                 ctx.reset();
                 ctx.scale(4, 4);
+                ctx.beginPath();
+                ctx.fillStyle = "rgb(255, 255, 255)";
+                ctx.fillRect(-20, -20, 500, 500);
+                ctx.fill();
+        
                 for(let i = 0; i < MarkBuffer.length; i++){
                     MarkBuffer[i].draw(ctx);
                 }
@@ -178,13 +207,14 @@ function Draw(event: MouseEvent){
     for(let i = 0; i < PointBuffer.length; i++){
         tmp.push({x: PointBuffer[i].x, y: PointBuffer[i].y});
     }
+    let tmpCol: Color = {red: color.red, green: color.green, blue: color.blue};
     if(CurrentMarkType === "thin"){
         MarkBuffer[MarkBuffer.length - 1].draw = (ctx: CanvasRenderingContext2D) => {
-            DrawLine(ctx, tmp, 1);
+            DrawLine(ctx, tmp, 1, tmpCol);
         };
     } else if(CurrentMarkType === "thick"){
         MarkBuffer[MarkBuffer.length - 1].draw = (ctx: CanvasRenderingContext2D) => {
-            DrawLine(ctx, tmp, 4);
+            DrawLine(ctx, tmp, 4, tmpCol);
         };
     }
     else {
@@ -199,15 +229,20 @@ function Draw(event: MouseEvent){
     document.dispatchEvent(drawingChanged);
 }
 function DrawTool(event: MouseEvent){
+    let tmpCol: Color = {red: color.red, green: color.green, blue: color.blue};
     if(markType === "thin"){
         Tool.draw = (ctx: CanvasRenderingContext2D) => {
             ctx.beginPath();
+            ctx.fillStyle = "rgb(" + tmpCol.red + ", " + tmpCol.green + ", " + tmpCol.blue + ")";
+            ctx.strokeStyle = "rgb(" + tmpCol.red + ", " + tmpCol.green + ", " + tmpCol.blue + ")";
             ctx.ellipse(event.offsetX, event.offsetY, 0.5, 0.5, 0, 0, 360);
             ctx.fill();
         };
     } else if(markType === "thick"){
         Tool.draw = (ctx: CanvasRenderingContext2D) => {
             ctx.beginPath();
+            ctx.fillStyle = "rgb(" + tmpCol.red + ", " + tmpCol.green + ", " + tmpCol.blue + ")";
+            ctx.strokeStyle = "rgb(" + tmpCol.red + ", " + tmpCol.green + ", " + tmpCol.blue + ")";
             ctx.ellipse(event.offsetX, event.offsetY, 2, 2, 0, 0, 360);
             ctx.fill();
         };
@@ -252,9 +287,11 @@ function DrawText(ctx: CanvasRenderingContext2D, txt: string, pos: Point){
     ctx.resetTransform();
     ctx.restore();
 }
-function DrawLine(ctx: CanvasRenderingContext2D, data: Point[], size: number){
+function DrawLine(ctx: CanvasRenderingContext2D, data: Point[], size: number, col: Color){
     ctx.lineJoin = "round";
     ctx.lineWidth = size;
+    ctx.fillStyle = "rgb(" + col.red + ", " + col.green + ", " + col.blue + ")";
+    ctx.strokeStyle = "rgb(" + col.red + ", " + col.green + ", " + col.blue + ")";
     ctx.beginPath();
     for(let i = 0; i < data.length; i++){
         if(i === 0){
@@ -270,6 +307,12 @@ function DrawLine(ctx: CanvasRenderingContext2D, data: Point[], size: number){
 function Redraw(){
     if(ctx !== null){
         ctx.reset();
+        ctx.beginPath();
+        ctx.fillStyle = "rgb(255, 255, 255)";
+        ctx.strokeStyle = "rgb(255, 0, 255)";
+        ctx.fillRect(-20, -20, 500, 500);
+        ctx.fill();
+        
         for(let i = 0; i < MarkBuffer.length; i++){
             MarkBuffer[i].draw(ctx);
         }
