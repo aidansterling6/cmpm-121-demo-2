@@ -90,9 +90,10 @@ interface Sticker {
 }
 
 let Stickers: Sticker[] = [
-    {txt: "😀", bAdded: false},
-    {txt: "😶", bAdded: false},
-    {txt: "🙃", bAdded: false},
+    {txt: "🐉", bAdded: false},
+    {txt: "🌲", bAdded: false},
+    {txt: "🦦", bAdded: false},
+    {txt: "🌌", bAdded: false},
 ];
 function addSticker(sticker: Sticker){
     AddHTMLButton({type: "button", innerHTML: sticker.txt, ClickFunction: (event) => {
