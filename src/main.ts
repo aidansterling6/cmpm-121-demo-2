@@ -4,6 +4,88 @@ import "./style.css";
 const APP_NAME = "Sticker Sketchpad";
 const app = document.querySelector<HTMLDivElement>("#app")!;
 
+interface Button {
+    type: string; 
+    innerHTML: string | null;
+    ClickFunction: (event: MouseEvent) => void;
+}
+let Buttons: Button[] = [
+    {
+        type: "button",
+        innerHTML: "clear", 
+        ClickFunction: (event) => {
+            MarkBuffer.splice(0, MarkBuffer.length);
+            RedoBuffer.splice(0, RedoBuffer.length);
+            document.dispatchEvent(drawingChanged);
+        }
+    },
+    {
+        type: "button",
+        innerHTML: "undo", 
+        ClickFunction: (event) => {
+            StackTopExchange(MarkBuffer, RedoBuffer);
+            document.dispatchEvent(drawingChanged);
+        }
+    },
+    {
+        type: "button",
+        innerHTML: "redo", 
+        ClickFunction: (event) => {
+            StackTopExchange(RedoBuffer, MarkBuffer);
+            document.dispatchEvent(drawingChanged);
+        }
+    },
+    {
+        type: "button",
+        innerHTML: "thin", 
+        ClickFunction: (event) => {
+            markType = "thin";
+        }
+    },
+    {
+        type: "button",
+        innerHTML: "thick", 
+        ClickFunction: (event) => {
+            markType = "thick";
+        }
+    },
+    {
+        type: "button",
+        innerHTML: "Add Sticker", 
+        ClickFunction: (event) => {
+            let tmp: string | null = prompt("enter an emoji", "");
+            if(tmp !== null){
+                Stickers.push({txt: tmp, bAdded: false});
+                updateStickerButtons();
+            }
+        }
+    }
+];
+
+interface Sticker {
+    txt: string;
+    bAdded: boolean;
+}
+
+let Stickers: Sticker[] = [
+    {txt: "😀", bAdded: false},
+    {txt: "😶", bAdded: false},
+    {txt: "🙃", bAdded: false},
+];
+function addSticker(sticker: Sticker){
+    AddHTMLButton({type: "button", innerHTML: sticker.txt, ClickFunction: (event) => {
+        markType = sticker.txt;
+    }});
+    sticker.bAdded = true;
+}
+function updateStickerButtons(){
+    for(const sticker of Stickers){
+        if(!sticker.bAdded){
+            addSticker(sticker);
+        }
+    }
+}
+
 let markType: string = "thin";
 let CurrentMarkType: string = "thin";
 interface Mark
@@ -31,34 +113,11 @@ canvas.height = 256;
 
 AddHTMLElement("div");
 
-AddHTMLButton("button", "clear", (event) => {
-    MarkBuffer.splice(0, MarkBuffer.length);
-    RedoBuffer.splice(0, RedoBuffer.length);
-    document.dispatchEvent(drawingChanged);
-});
-AddHTMLButton("button", "undo", (event) => {
-    StackTopExchange(MarkBuffer, RedoBuffer);
-    document.dispatchEvent(drawingChanged);
-});
-AddHTMLButton("button", "redo", (event) => {
-    StackTopExchange(RedoBuffer, MarkBuffer);
-    document.dispatchEvent(drawingChanged);
-});
-AddHTMLButton("button", "thin", (event) => {
-    markType = "thin";
-});
-AddHTMLButton("button", "thick", (event) => {
-    markType = "thick";
-});
-AddHTMLButton("button", "😀", (event) => {
-    markType = '😀';
-});
-AddHTMLButton("button", "😶", (event) => {
-    markType = '😶';
-});
-AddHTMLButton("button", "🙃", (event) => {
-    markType = '🙃';
-});
+for(const button of Buttons){
+    AddHTMLButton(button);
+}
+updateStickerButtons();
+
 let EventParameter: MouseEvent;
 const drawingChanged = new Event("drawing-changed");
 document.addEventListener("drawing-changed", Redraw);
@@ -147,9 +206,9 @@ function AddHTMLElement(type: string, innerHTML: string | null = null): HTMLElem
     }
     return tmp;
 }
-function AddHTMLButton(type: string, innerHTML: string | null = null, ClickFunction: (event: MouseEvent) => void): HTMLElement{
-    const tmp = AddHTMLElement(type, innerHTML);
-    tmp.addEventListener("click", ClickFunction);
+function AddHTMLButton(button: Button): HTMLElement{
+    const tmp = AddHTMLElement(button.type, button.innerHTML);
+    tmp.addEventListener("click", button.ClickFunction);
     return tmp;
 }
 function StackTopExchange(buffer1: any[], buffer2: any[]){
