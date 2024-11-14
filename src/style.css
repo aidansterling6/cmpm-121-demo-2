@@ -99,4 +99,5 @@ button:focus-visible {
   border-color: black;
   border-width: "2px";
   border-radius: 30px;
+  cursor: none;
 }

@@ -10,10 +10,16 @@ interface Color {
 }
 let color: Color = {red: 0, green: 0, blue:0};
 
+// Divs to hold buttons, so as to keep them organized
+let actionButtons = document.createElement("div");
+let lineButtons = document.createElement("div");
+let stickerButtons = document.createElement("div");
+
 interface Button {
     type: string; 
     innerHTML: string | null;
     ClickFunction: (event: MouseEvent) => void;
+    parent: HTMLElement;
 }
 let Buttons: Button[] = [
     {
@@ -23,7 +29,8 @@ let Buttons: Button[] = [
             MarkBuffer.splice(0, MarkBuffer.length);
             RedoBuffer.splice(0, RedoBuffer.length);
             document.dispatchEvent(drawingChanged);
-        }
+        },
+        parent: actionButtons
     },
     {
         type: "button",
@@ -31,7 +38,8 @@ let Buttons: Button[] = [
         ClickFunction: (event) => {
             StackTopExchange(MarkBuffer, RedoBuffer);
             document.dispatchEvent(drawingChanged);
-        }
+        },
+        parent: actionButtons
     },
     {
         type: "button",
@@ -39,21 +47,24 @@ let Buttons: Button[] = [
         ClickFunction: (event) => {
             StackTopExchange(RedoBuffer, MarkBuffer);
             document.dispatchEvent(drawingChanged);
-        }
+        }, 
+        parent: actionButtons
     },
     {
         type: "button",
         innerHTML: "thin", 
         ClickFunction: (event) => {
             markType = "thin";
-        }
+        },
+        parent: lineButtons
     },
     {
         type: "button",
         innerHTML: "thick", 
         ClickFunction: (event) => {
             markType = "thick";
-        }
+        },
+        parent: lineButtons
     },
     {
         type: "button",
@@ -71,7 +82,8 @@ let Buttons: Button[] = [
             if(tmpBlue){
                 color.blue = Number(tmpBlue);
             }
-        }
+        },
+        parent: lineButtons
     },
     {
         type: "button",
@@ -98,7 +110,8 @@ let Buttons: Button[] = [
             anchor.href = canvas.toDataURL("image/png");
             anchor.download = "sketchpad.png";
             anchor.click();
-        }
+        },
+        parent: actionButtons
     },
     {
         type: "button",
@@ -109,7 +122,8 @@ let Buttons: Button[] = [
                 Stickers.push({txt: tmp, bAdded: false});
                 updateStickerButtons();
             }
-        }
+        },
+        parent: stickerButtons
     }
 ];
 
@@ -125,7 +139,7 @@ let Stickers: Sticker[] = [
     {txt: "🌌", bAdded: false},
 ];
 function addSticker(sticker: Sticker){
-    AddHTMLButton({type: "button", innerHTML: sticker.txt, ClickFunction: (event) => {
+    AddHTMLButton({type: "button", parent: stickerButtons, innerHTML: sticker.txt, ClickFunction: (event) => {
         markType = sticker.txt;
     }});
     sticker.bAdded = true;
@@ -155,7 +169,7 @@ const MarkBuffer: Mark[] = [];
 const RedoBuffer: Mark[] = [];
 
 document.title = APP_NAME;
-const header = AddHTMLElement("h1", APP_NAME);
+const header = AddHTMLElement("h1", app, APP_NAME);
 const canvas = document.createElement("canvas");
 const ctx: CanvasRenderingContext2D | null = canvas.getContext("2d");
 app.append(canvas);
@@ -163,7 +177,11 @@ canvas.id = "canvas";
 canvas.width = 256;
 canvas.height = 256;
 
-AddHTMLElement("div");
+AddHTMLElement("div", app);
+
+app.append(actionButtons);
+app.append(lineButtons);
+app.append(stickerButtons);
 
 for(const button of Buttons){
     AddHTMLButton(button);
@@ -256,16 +274,16 @@ function DrawTool(event: MouseEvent){
     document.dispatchEvent(ToolMoved);
 }
 
-function AddHTMLElement(type: string, innerHTML: string | null = null): HTMLElement{
+function AddHTMLElement(type: string, parent: HTMLElement, innerHTML: string | null = null): HTMLElement{
     const tmp = document.createElement(type);
-    app.append(tmp);
+    parent.append(tmp);
     if(innerHTML !== null){
         tmp.innerHTML = innerHTML;
     }
     return tmp;
 }
 function AddHTMLButton(button: Button): HTMLElement{
-    const tmp = AddHTMLElement(button.type, button.innerHTML);
+    const tmp = AddHTMLElement(button.type, button.parent, button.innerHTML);
     tmp.addEventListener("click", button.ClickFunction);
     return tmp;
 }
