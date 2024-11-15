@@ -8,12 +8,12 @@ interface Color {
     green: number;
     blue: number;
 }
-let color: Color = {red: 0, green: 0, blue:0};
+const color: Color = {red: 0, green: 0, blue:0};
 
 // Divs to hold buttons, so as to keep them organized
-let actionButtons = document.createElement("div");
-let lineButtons = document.createElement("div");
-let stickerButtons = document.createElement("div");
+const actionButtons = document.createElement("div");
+const lineButtons = document.createElement("div");
+const stickerButtons = document.createElement("div");
 
 interface Button {
     type: string; 
@@ -21,11 +21,11 @@ interface Button {
     ClickFunction: (event: MouseEvent) => void;
     parent: HTMLElement;
 }
-let Buttons: Button[] = [
+const Buttons: Button[] = [
     {
         type: "button",
         innerHTML: "clear", 
-        ClickFunction: (event) => {
+        ClickFunction: () => {
             MarkBuffer.splice(0, MarkBuffer.length);
             RedoBuffer.splice(0, RedoBuffer.length);
             document.dispatchEvent(drawingChanged);
@@ -35,7 +35,7 @@ let Buttons: Button[] = [
     {
         type: "button",
         innerHTML: "undo", 
-        ClickFunction: (event) => {
+        ClickFunction: () => {
             StackTopExchange(MarkBuffer, RedoBuffer);
             document.dispatchEvent(drawingChanged);
         },
@@ -44,7 +44,7 @@ let Buttons: Button[] = [
     {
         type: "button",
         innerHTML: "redo", 
-        ClickFunction: (event) => {
+        ClickFunction: () => {
             StackTopExchange(RedoBuffer, MarkBuffer);
             document.dispatchEvent(drawingChanged);
         }, 
@@ -53,7 +53,7 @@ let Buttons: Button[] = [
     {
         type: "button",
         innerHTML: "thin", 
-        ClickFunction: (event) => {
+        ClickFunction: () => {
             markType = "thin";
         },
         parent: lineButtons
@@ -61,7 +61,7 @@ let Buttons: Button[] = [
     {
         type: "button",
         innerHTML: "thick", 
-        ClickFunction: (event) => {
+        ClickFunction: () => {
             markType = "thick";
         },
         parent: lineButtons
@@ -69,16 +69,16 @@ let Buttons: Button[] = [
     {
         type: "button",
         innerHTML: "color", 
-        ClickFunction: (event) => {
-            let tmpRed: string | null = prompt("red", "0");
+        ClickFunction: () => {
+            const tmpRed: string | null = prompt("red", "0");
             if(tmpRed){
                 color.red = Number(tmpRed);
             }
-            let tmpGreen: string | null = prompt("green", "0");
+            const tmpGreen: string | null = prompt("green", "0");
             if(tmpGreen){
                 color.green = Number(tmpGreen);
             }
-            let tmpBlue: string | null = prompt("blue", "0");
+            const tmpBlue: string | null = prompt("blue", "0");
             if(tmpBlue){
                 color.blue = Number(tmpBlue);
             }
@@ -88,7 +88,7 @@ let Buttons: Button[] = [
     {
         type: "button",
         innerHTML: "export", 
-        ClickFunction: (event) => {
+        ClickFunction: () => {
             const canvas = document.createElement("canvas");
             const ctx: CanvasRenderingContext2D | null = canvas.getContext("2d");
             canvas.id = "export canvas";
@@ -116,40 +116,22 @@ let Buttons: Button[] = [
     {
         type: "button",
         innerHTML: "Add Sticker", 
-        ClickFunction: (event) => {
-            let tmp: string | null = prompt("enter an emoji", "");
+        ClickFunction: () => {
+            const tmp: string | null = prompt("enter an emoji", "");
             if(tmp !== null){
-                Stickers.push({txt: tmp, bAdded: false});
-                updateStickerButtons();
+                addSticker(tmp);
             }
         },
         parent: stickerButtons
     }
 ];
 
-interface Sticker {
-    txt: string;
-    bAdded: boolean;
-}
-
-let Stickers: Sticker[] = [
-    {txt: "🐉", bAdded: false},
-    {txt: "🌲", bAdded: false},
-    {txt: "🦦", bAdded: false},
-    {txt: "🌌", bAdded: false},
-];
+type Sticker = string;
+const Stickers: Sticker[] = ["🐉", "🌲", "🦦", "🌌"];
 function addSticker(sticker: Sticker){
-    AddHTMLButton({type: "button", parent: stickerButtons, innerHTML: sticker.txt, ClickFunction: (event) => {
-        markType = sticker.txt;
+    AddHTMLButton({type: "button", parent: stickerButtons, innerHTML: sticker, ClickFunction: () => {
+        markType = sticker;
     }});
-    sticker.bAdded = true;
-}
-function updateStickerButtons(){
-    for(const sticker of Stickers){
-        if(!sticker.bAdded){
-            addSticker(sticker);
-        }
-    }
 }
 
 let markType: string = "thin";
@@ -169,7 +151,7 @@ const MarkBuffer: Mark[] = [];
 const RedoBuffer: Mark[] = [];
 
 document.title = APP_NAME;
-const header = AddHTMLElement("h1", app, APP_NAME);
+AddHTMLElement("h1", app, APP_NAME);
 const canvas = document.createElement("canvas");
 const ctx: CanvasRenderingContext2D | null = canvas.getContext("2d");
 app.append(canvas);
@@ -186,9 +168,10 @@ app.append(stickerButtons);
 for(const button of Buttons){
     AddHTMLButton(button);
 }
-updateStickerButtons();
+for (const sticker of Stickers) {
+    addSticker(sticker);
+}
 
-let EventParameter: MouseEvent;
 const drawingChanged = new Event("drawing-changed");
 document.addEventListener("drawing-changed", Redraw);
 
@@ -201,7 +184,7 @@ canvas.addEventListener("mousedown", (event) => {
     mouseDown = true;
     Draw(event);
 });
-canvas.addEventListener("mouseup", (event) => {
+canvas.addEventListener("mouseup", () => {
     mouseDown = false;
     bCreateNewLineSegment = true;
     PointBuffer.splice(0, PointBuffer.length);
@@ -221,11 +204,11 @@ function Draw(event: MouseEvent){
         CurrentMarkType = markType;
     }
     PointBuffer.push({x: event.offsetX, y: event.offsetY});
-    let tmp: Point[] = [];
+    const tmp: Point[] = [];
     for(let i = 0; i < PointBuffer.length; i++){
         tmp.push({x: PointBuffer[i].x, y: PointBuffer[i].y});
     }
-    let tmpCol: Color = {red: color.red, green: color.green, blue: color.blue};
+    const tmpCol: Color = {red: color.red, green: color.green, blue: color.blue};
     if(CurrentMarkType === "thin"){
         MarkBuffer[MarkBuffer.length - 1].draw = (ctx: CanvasRenderingContext2D) => {
             DrawLine(ctx, tmp, 1, tmpCol);
@@ -236,7 +219,7 @@ function Draw(event: MouseEvent){
         };
     }
     else {
-        let tmpTxt = String(CurrentMarkType);
+        const tmpTxt = String(CurrentMarkType);
         MarkBuffer[MarkBuffer.length - 1].draw = (ctx: CanvasRenderingContext2D) => {
             DrawText(ctx, tmpTxt, {x: event.offsetX, y: event.offsetY});
         };
@@ -247,7 +230,7 @@ function Draw(event: MouseEvent){
     document.dispatchEvent(drawingChanged);
 }
 function DrawTool(event: MouseEvent){
-    let tmpCol: Color = {red: color.red, green: color.green, blue: color.blue};
+    const tmpCol: Color = {red: color.red, green: color.green, blue: color.blue};
     if(markType === "thin"){
         Tool.draw = (ctx: CanvasRenderingContext2D) => {
             ctx.beginPath();
@@ -266,7 +249,7 @@ function DrawTool(event: MouseEvent){
         };
     }
     else {
-        let tmpTxt = String(markType);
+        const tmpTxt = String(markType);
         Tool.draw = (ctx: CanvasRenderingContext2D) => {
             DrawText(ctx, tmpTxt, {x: event.offsetX, y: event.offsetY});
         };
@@ -288,7 +271,7 @@ function AddHTMLButton(button: Button): HTMLElement{
     return tmp;
 }
 function StackTopExchange(buffer1: any[], buffer2: any[]){
-    let tmp: any | undefined = buffer1.pop();
+    const tmp: any | undefined = buffer1.pop();
     if(tmp !== undefined){
         buffer2.push(tmp);
     }
